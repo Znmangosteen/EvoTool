@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './ui/main_page.ui'
+# Form implementation generated from reading ui file 'main_page.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -34,8 +34,14 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.train_btn)
         self.progressBar = QtWidgets.QProgressBar(self.centralwidget)
         self.progressBar.setGeometry(QtCore.QRect(180, 400, 118, 23))
-        self.progressBar.setProperty("value", 24)
+        self.progressBar.setProperty("value", 0)
         self.progressBar.setObjectName("progressBar")
+        self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox.setGeometry(QtCore.QRect(200, 310, 65, 16))
+        self.checkBox.setObjectName("checkBox")
+        self.checkBox_2 = QtWidgets.QCheckBox(self.centralwidget)
+        self.checkBox_2.setGeometry(QtCore.QRect(100, 310, 65, 16))
+        self.checkBox_2.setObjectName("checkBox_2")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 796, 22))
@@ -52,3 +58,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.open_dataset_btn.setText(_translate("MainWindow", "打开数据集"))
+        self.open_model_btn.setText(_translate("MainWindow", "加载模型"))
+        self.train_btn.setText(_translate("MainWindow", "训练"))
+        self.checkBox.setText(_translate("MainWindow", "CheckBox"))
+        self.checkBox_2.setText(_translate("MainWindow", "CheckBox"))
