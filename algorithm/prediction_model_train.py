@@ -70,7 +70,7 @@ class prediction_model_train(QThread):
 
         # plt.rcParams['font.sans-serif'] = ['SimHei']
 
-        df = pd.read_csv(self.dataset, header=0, encoding='utf-8', engine='python')
+        df = pd.read_csv(self.train_data, header=0, encoding='utf-8', engine='python')
         data = df.iloc[:, 1:9]
 
         X, y = df.iloc[:, 1:9], df.iloc[:, 9]
