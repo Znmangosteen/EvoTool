@@ -6,85 +6,126 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>796</width>
-    <height>591</height>
+    <width>798</width>
+    <height>598</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>综合实验平台</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QTabWidget" name="tab">
     <property name="geometry">
      <rect>
-      <x>180</x>
-      <y>160</y>
-      <width>161</width>
-      <height>91</height>
+      <x>20</x>
+      <y>20</y>
+      <width>711</width>
+      <height>521</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QPushButton" name="open_dataset_btn">
-       <property name="text">
-        <string>打开数据集</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="open_model_btn">
-       <property name="text">
-        <string>加载模型</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="train_btn">
-       <property name="text">
-        <string>训练</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QProgressBar" name="progressBar">
-    <property name="geometry">
-     <rect>
-      <x>180</x>
-      <y>400</y>
-      <width>118</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="value">
+    <property name="currentIndex">
      <number>0</number>
     </property>
-   </widget>
-   <widget class="QCheckBox" name="checkBox">
-    <property name="geometry">
-     <rect>
-      <x>200</x>
-      <y>310</y>
-      <width>65</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>CheckBox</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="checkBox_2">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>310</y>
-      <width>65</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>CheckBox</string>
-    </property>
+    <widget class="QWidget" name="prediction_train">
+     <attribute name="title">
+      <string>预测模型训练</string>
+     </attribute>
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>180</y>
+        <width>161</width>
+        <height>104</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QPushButton" name="open_dataset_btn">
+         <property name="text">
+          <string>打开数据集</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="train_btn">
+         <property name="text">
+          <string>训练</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>430</y>
+        <width>118</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>470</x>
+        <y>130</y>
+        <width>160</width>
+        <height>151</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <widget class="QComboBox" name="algo_select">
+         <item>
+          <property name="text">
+           <string>lightgbm</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>随机森林</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="prediction_config_btn">
+         <property name="text">
+          <string>打开模型配置文件</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="prediction_infer">
+     <attribute name="title">
+      <string>预测模型推理</string>
+     </attribute>
+     <widget class="QPushButton" name="open_model_btn">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>130</y>
+        <width>159</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>加载模型</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="EA_train">
+     <attribute name="title">
+      <string>EA实验</string>
+     </attribute>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -92,7 +133,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>796</width>
+     <width>798</width>
      <height>22</height>
     </rect>
    </property>

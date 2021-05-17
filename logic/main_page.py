@@ -23,10 +23,14 @@ class MainForm(QMainWindow, Ui_MainWindow):
         # self.open_file()
 
     def open_dataset(self):
-        fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),
-                                                                   "dataset(*.xlsx *.csv)")
+        dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集", os.getcwd(),
+                                                                       "dataset(*.xlsx *.csv)")
 
-        self._prediction_model_train.set_train_data(fileName)
+        self._prediction_model_train.set_train_data(dataset_name)
+
+    def open_model_config(self):
+        config_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取配置文件", os.getcwd(), "config(*.yaml)")
+        self._prediction_model_train.set_model_config(config_name)
 
     def open_model(self):
         fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),

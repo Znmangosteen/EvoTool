@@ -1,4 +1,6 @@
 # from PyQt5.QtCore import pyqtSignal, QThread
+import yaml
+
 from lightgbm import lightgbm_model
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -13,29 +15,6 @@ from PyQt5.Qt import *
 
 import os
 
-from ui.main_page import Ui_MainWindow
-class Win(QWidget):
-    my_singal = pyqtSignal(str)
-
-    def __init__(self):
-        super().__init__()
-        self.initUI()
-        self.setWindowTitle('Main Window')
-        self.setGeometry(300, 300, 300, 150)
-
-    def initUI(self):
-        btn = QPushButton("Button", self)
-        btn.move(50, 50)
-        self.my_singal.connect(self.mysignal)
-        btn.clicked.connect(self.prn)
-
-    def prn(self):
-        print("Print Test")
-        self.my_singal.emit("My Slot")
-
-    def mysignal(self, para):
-        print(para)
-
 
 class prediction_model_train(QThread):
     # __instance = None
@@ -44,20 +23,23 @@ class prediction_model_train(QThread):
     algo_dict = {'lightgbm': lightgbm_model}
     process_signal = pyqtSignal(int)
 
-
-    def __init__(self, ):
+    def __init__(self, **kwargs):
         super().__init__()
         self.__first_init = False
         self.dataset = ''
-        self.train_data = ''
+        self.train_data = './dataset/emission.csv'
         self.val_data = ''
         self.choose_algo = ''
+        self.model_config = './model_config/rf_config.yaml'
 
     def set_algo(self, algo):
         self.choose_algo = algo
 
     def set_train_data(self, train_data):
         self.train_data = train_data
+
+    def set_model_config(self, model_config):
+        self.model_config = model_config
 
     def run(self):
 
@@ -93,20 +75,22 @@ class prediction_model_train(QThread):
 
         # 将参数写成字典
         # 可以在此修改max_leaf_nodes和max_depth所要循环遍历的范围
-        params = {
-
-            'n_estimators': 50,  # 树的数量
-            'max_leaf_nodes': range(50, 70, 10),
-            'max_depth': range(10, 13, 1),
-            'ccp_alpha': 0.0,
-            'max_features': 'log2',
-            'min_samples_split': 2,
-            'min_samples_leaf': 1,
-            'min_weight_fraction_leaf': 0.,
-            'random_state': 233,
-            'feature_num': '',
-        }
-
+        # params = {
+        #
+        #     'n_estimators': 50,  # 树的数量
+        #     'max_leaf_nodes': range(50, 70, 10),
+        #     'max_depth': range(10, 13, 1),
+        #     'ccp_alpha': 0.0,
+        #     'max_features': 'log2',
+        #     'min_samples_split': 2,
+        #     'min_samples_leaf': 1,
+        #     'min_weight_fraction_leaf': 0.,
+        #     'random_state': 233,
+        #     # 'feature_num': '',
+        # }
+        with open(self.model_config) as f:
+            print(f)
+            params = yaml.load(f, Loader=yaml.SafeLoader)
         all_iter_para_name = ['max_leaf_nodes', 'max_depth']
         all_iter_range = [params[_] for _ in all_iter_para_name]
 
@@ -141,14 +125,17 @@ class prediction_model_train(QThread):
 
             X_train, X_test, y_train, y_test = X_train_ori, X_test_ori, y_train_ori, y_test_ori
 
-            rfr = RandomForestRegressor(n_estimators=params['n_estimators'], max_leaf_nodes=params['max_leaf_nodes'],
-                                        max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
-                                        max_features=params['max_features'],
-                                        min_samples_split=params['min_samples_split'],
-                                        min_samples_leaf=params['min_samples_leaf'],
-                                        min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
-                                        random_state=params['random_state'])
+            # rfr = RandomForestRegressor(n_estimators=params['n_estimators'], max_leaf_nodes=params['max_leaf_nodes'],
+            #                             max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
+            #                             max_features=params['max_features'],
+            #                             min_samples_split=params['min_samples_split'],
+            #                             min_samples_leaf=params['min_samples_leaf'],
+            #                             min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
+            #                             random_state=params['random_state'])
+            rfr = RandomForestRegressor(**params)
             rfr.fit(X_train, y_train)
+            print(rfr.n_estimators)
+
             # 储存结果
             # 保存路径，根据当前时间创建一个文件夹
 
@@ -343,17 +330,19 @@ class prediction_model_train(QThread):
                         X_train = X_train[selected_features]
                         X_test = X_test[selected_features]
 
-                        rfr = RandomForestRegressor(n_estimators=params['n_estimators'],
-                                                    max_leaf_nodes=params['max_leaf_nodes'],
-                                                    max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
-                                                    max_features=params['max_features'],
-                                                    min_samples_split=params['min_samples_split'],
-                                                    min_samples_leaf=params['min_samples_leaf'],
-                                                    min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
-                                                    random_state=params['random_state'])
+                        # rfr = RandomForestRegressor(n_estimators=params['n_estimators'],
+                        #                             max_leaf_nodes=params['max_leaf_nodes'],
+                        #                             max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
+                        #                             max_features=params['max_features'],
+                        #                             min_samples_split=params['min_samples_split'],
+                        #                             min_samples_leaf=params['min_samples_leaf'],
+                        #                             min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
+                        #                             random_state=params['random_state'])
+                        rfr = RandomForestRegressor(**params)
+
                         rfr.fit(X_train, y_train)
 
-                        params['feature_num'] = f_num
+                        # params['feature_num'] = f_num
 
             if enable_feature_select:
                 # 使用不同特征的损失图
@@ -378,7 +367,7 @@ class prediction_model_train(QThread):
                 plt.legend(handles1 + handles2, labels1 + labels2, loc='right')
 
                 plt.savefig(base_path + 'Features_loss.png')
-            self.process_signal.emit(int(((c_time+1) / len(all_iter)*100)))
+            self.process_signal.emit(int(((c_time + 1) / len(all_iter) * 100)))
 
         shutil.copytree(rmse_best_path, './prediction_result/{}/rmse_best/'.format(folder_name))
         shutil.copytree(r_squre_best_path, './prediction_result/{}/r_squre_best/'.format(folder_name))

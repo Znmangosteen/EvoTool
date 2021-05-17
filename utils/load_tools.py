@@ -18,9 +18,9 @@ def load_dataset(dataset_name):
     except:
         print('数据加载失败')
 
-def open_file(self):
-    # print('123')
-    fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),
-                                                               "All Files(*);;Text Files(*.txt)")
-    print(fileName)
-    print(fileType)
+# def open_file(self):
+#     # print('123')
+#     fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),
+#                                                                "All Files(*);;Text Files(*.txt)")
+#     print(fileName)
+#     print(fileType)
