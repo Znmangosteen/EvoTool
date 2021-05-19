@@ -12,25 +12,23 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.preprocessing import StandardScaler
 from PyQt5.Qt import *
-
+from load_tools import *
 import os
+
+from mertric import eval_model
 
 
 class prediction_model_train(QThread):
-    # __instance = None
-    # __first_init = True
-
     algo_dict = {'lightgbm': lightgbm_model}
     process_signal = pyqtSignal(int)
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.__first_init = False
-        self.dataset = ''
-        self.train_data = './dataset/emission.csv'
+        # self.dataset = ''
+        self.train_data = load_dataset('./dataset/emission.xlsx')
         self.val_data = ''
-        self.choose_algo = ''
-        self.model_config = './model_config/rf_config.yaml'
+        self.choose_algo = self.algo_dict['lightgbm']
+        self.model_config = load_config('./model_config/rf_config.yaml')
 
     def set_algo(self, algo):
         self.choose_algo = algo
@@ -44,18 +42,16 @@ class prediction_model_train(QThread):
     def run(self):
 
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
-        plt.rcParams['axes.unicode_minus'] = False  # 用来正常现实负
-
-        def eval_model(model, data_x, data_y, ):
-            model_pred = model.predict(data_x)
-            return np.square(mean_squared_error(data_y, model_pred)), r2_score(data_y, model_pred)
+        plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
         # plt.rcParams['font.sans-serif'] = ['SimHei']
 
-        df = pd.read_csv(self.train_data, header=0, encoding='utf-8', engine='python')
-        data = df.iloc[:, 1:9]
+        # df = pd.read_csv(self.train_data, header=0, encoding='utf-8', engine='python')
+        # df = pd.read_excel(self.train_data)
+        df = self.train_data
+        data = df.iloc[:, 0:8]
 
-        X, y = df.iloc[:, 1:9], df.iloc[:, 9]
+        X, y = df.iloc[:, 0:8], df.iloc[:, 8]
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         ss_x = StandardScaler()
 
@@ -75,22 +71,8 @@ class prediction_model_train(QThread):
 
         # 将参数写成字典
         # 可以在此修改max_leaf_nodes和max_depth所要循环遍历的范围
-        # params = {
-        #
-        #     'n_estimators': 50,  # 树的数量
-        #     'max_leaf_nodes': range(50, 70, 10),
-        #     'max_depth': range(10, 13, 1),
-        #     'ccp_alpha': 0.0,
-        #     'max_features': 'log2',
-        #     'min_samples_split': 2,
-        #     'min_samples_leaf': 1,
-        #     'min_weight_fraction_leaf': 0.,
-        #     'random_state': 233,
-        #     # 'feature_num': '',
-        # }
-        with open(self.model_config) as f:
-            print(f)
-            params = yaml.load(f, Loader=yaml.SafeLoader)
+
+        params = self.model_config
         all_iter_para_name = ['max_leaf_nodes', 'max_depth']
         all_iter_range = [params[_] for _ in all_iter_para_name]
 
@@ -146,7 +128,7 @@ class prediction_model_train(QThread):
             sorted_name = [_[0].replace("_", " ") for _ in sorted_importance]
             sorted_importance_val = [float(_[1]) for _ in sorted_importance]
 
-            base_path = './prediction_result/{}/'.format(folder_name) + ''.join(
+            base_path = './run/prediction/{}/'.format(folder_name) + ''.join(
                 [_ + '-' + str(__) + '--' for _, __ in zip(all_iter_para_name, c_para)])
             base_path = base_path.rstrip('-') + '/'
             for f_num in range(len(sorted_name), 0, -1):
