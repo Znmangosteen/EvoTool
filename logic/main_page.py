@@ -33,6 +33,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
         self.open_result_btn.clicked.connect(self.open_result_folder)
 
+        self.algo_select.activated[str].connect(self.change_algo)
     def open_dataset(self):
         # dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集", os.getcwd(),
         #                                                                "dataset(*.xlsx *.csv)")
@@ -70,4 +71,9 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
     def train_model(self):
         self._prediction_model_train.start()
+
+    def change_algo(self,selected_algo):
+        self._prediction_model_train.set_algo(selected_algo)
+        print(selected_algo)
+
 

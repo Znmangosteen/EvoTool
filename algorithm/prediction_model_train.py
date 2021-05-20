@@ -18,10 +18,11 @@ from load_tools import *
 import os
 
 from mertric import eval_model
+from random_forest import random_forest_model
 
 
 class prediction_model_train(QThread):
-    algo_dict = {'lightgbm': lightgbm_model}
+    algo_dict = {'lightgbm': lightgbm_model, '随机森林': random_forest_model}
     process_signal = pyqtSignal(int)
 
     def __init__(self, **kwargs):
@@ -32,13 +33,13 @@ class prediction_model_train(QThread):
         self.val_dataset = pd.DataFrame()
 
         self.set_dataset(**load_dataset('./dataset/emission.yaml'))
-        self.choose_algo = self.algo_dict['lightgbm']
+        self.chosen_algo = self.algo_dict['lightgbm']
         self.model_config = load_config('./model_config/rf_config.yaml')
 
         self.save_path = ''
 
     def set_algo(self, algo):
-        self.choose_algo = algo
+        self.chosen_algo = self.algo_dict[algo]
 
     def set_dataset(self, dataset_config, train_dataset, val_dataset):
         self.dataset_config = dataset_config
@@ -105,7 +106,7 @@ class prediction_model_train(QThread):
         print(all_iter)
 
         # 用当前时间作为储存结果文件夹的名字
-        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-')+'  '+str(random.randint(10,99))
+        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-') + '  ' + str(random.randint(10, 99))
         folder_name = './run/prediction/{}/'.format(folder_name)
         self.save_path = folder_name
 
