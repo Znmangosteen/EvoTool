@@ -1,4 +1,6 @@
 # from PyQt5.QtCore import pyqtSignal, QThread
+import random
+
 import yaml
 
 from lightgbm import lightgbm_model
@@ -25,16 +27,26 @@ class prediction_model_train(QThread):
     def __init__(self, **kwargs):
         super().__init__()
         # self.dataset = ''
-        self.train_data = load_dataset('./dataset/emission.xlsx')
-        self.val_data = ''
+        self.dataset_config = {}
+        self.train_dataset = pd.DataFrame()
+        self.val_dataset = pd.DataFrame()
+
+        self.set_dataset(**load_dataset('./dataset/emission.yaml'))
         self.choose_algo = self.algo_dict['lightgbm']
         self.model_config = load_config('./model_config/rf_config.yaml')
+
+        self.save_path = ''
 
     def set_algo(self, algo):
         self.choose_algo = algo
 
+    def set_dataset(self, dataset_config, train_dataset, val_dataset):
+        self.dataset_config = dataset_config
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+
     def set_train_data(self, train_data):
-        self.train_data = train_data
+        self.train_dataset = train_data
 
     def set_model_config(self, model_config):
         self.model_config = model_config
@@ -48,11 +60,13 @@ class prediction_model_train(QThread):
 
         # df = pd.read_csv(self.train_data, header=0, encoding='utf-8', engine='python')
         # df = pd.read_excel(self.train_data)
-        df = self.train_data
-        data = df.iloc[:, 0:8]
+        # df = self.train_dataset
+        # data = df.iloc[:, 0:8]
 
-        X, y = df.iloc[:, 0:8], df.iloc[:, 8]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        # X, y = df.iloc[:, 0:8], df.iloc[:, 8]
+        # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train, y_train = self.train_dataset.iloc[:, 0:8], self.train_dataset.iloc[:, 8]
+        X_test, y_test = self.val_dataset.iloc[:, 0:8], self.val_dataset.iloc[:, 8]
         ss_x = StandardScaler()
 
         X_train = pd.DataFrame(ss_x.fit_transform(X_train.values), columns=X_train.columns)
@@ -91,7 +105,9 @@ class prediction_model_train(QThread):
         print(all_iter)
 
         # 用当前时间作为储存结果文件夹的名字
-        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-')
+        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-')+'  '+str(random.randint(10,99))
+        folder_name = './run/prediction/{}/'.format(folder_name)
+        self.save_path = folder_name
 
         rmse_best_path = ''
         rmse_lowest = float('inf')
@@ -122,13 +138,13 @@ class prediction_model_train(QThread):
             # 保存路径，根据当前时间创建一个文件夹
 
             feature_importance_rank = rfr.feature_importances_
-            feature_name = data.columns
+            feature_name = self.dataset_config['feature_columns']
 
             sorted_importance = sorted(zip(feature_name, feature_importance_rank), key=lambda x: x[1], reverse=True)
             sorted_name = [_[0].replace("_", " ") for _ in sorted_importance]
             sorted_importance_val = [float(_[1]) for _ in sorted_importance]
 
-            base_path = './run/prediction/{}/'.format(folder_name) + ''.join(
+            base_path = folder_name + ''.join(
                 [_ + '-' + str(__) + '--' for _, __ in zip(all_iter_para_name, c_para)])
             base_path = base_path.rstrip('-') + '/'
             for f_num in range(len(sorted_name), 0, -1):
@@ -351,5 +367,5 @@ class prediction_model_train(QThread):
                 plt.savefig(base_path + 'Features_loss.png')
             self.process_signal.emit(int(((c_time + 1) / len(all_iter) * 100)))
 
-        shutil.copytree(rmse_best_path, './prediction_result/{}/rmse_best/'.format(folder_name))
-        shutil.copytree(r_squre_best_path, './prediction_result/{}/r_squre_best/'.format(folder_name))
+        shutil.copytree(rmse_best_path, folder_name + 'rmse_best/')
+        shutil.copytree(r_squre_best_path, folder_name + 'r_squre_best/')

@@ -1,0 +1,8 @@
+train_dataset: './dataset/emission.xlsx'
+val_dataset: ''
+split_dataset: True
+test_size: 0.2
+use_random_seed: True
+random_state: ~
+feature_columns: [窗墙比 ,外窗传热系数 ,外墙传热系数 ,屋顶传热系数 ,采暖设置温度 ,制冷设置温度,能耗（MWh）,热舒适（绝对值）,加能耗碳排放(吨)]
+output_column: 加能耗碳排放(吨)

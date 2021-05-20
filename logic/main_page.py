@@ -8,7 +8,7 @@ from ui import *
 import os
 
 from ui.main_page import Ui_MainWindow
-
+from pathlib import Path
 
 class MainForm(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -23,19 +23,28 @@ class MainForm(QMainWindow, Ui_MainWindow):
         self.train_btn.clicked.connect(self.train_model)
         self.prediction_config_btn.clicked.connect(self.open_model_config)
 
-        # 设置数据层次结构，4行4列
         self.conf_table_model = QStandardItemModel()
-        # 设置水平方向四个头标签文本内容
         self.conf_table_model.setHorizontalHeaderLabels(['参数', '值'])
-
         self.config_table.setModel(self.conf_table_model)
-        # self.open_file()
+
+        self.dataset_table_model = QStandardItemModel()
+        self.dataset_table_model.setHorizontalHeaderLabels(['设定', '值'])
+        self.dataset_table.setModel(self.dataset_table_model)
+
+        self.open_result_btn.clicked.connect(self.open_result_folder)
 
     def open_dataset(self):
-        dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集", os.getcwd(),
-                                                                       "dataset(*.xlsx *.csv)")
+        # dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集", os.getcwd(),
+        #                                                                "dataset(*.xlsx *.csv)")
+        dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集配置文件", os.getcwd(),
+                                                                       "dataset(*.yaml)")
         if dataset_name:
-            self._prediction_model_train.set_train_data(load_dataset(dataset_name))
+            self._prediction_model_train.set_dataset(**load_dataset(dataset_name))
+
+        self.dataset_table_model.clear()
+        self.dataset_table_model.setHorizontalHeaderLabels(['设定', '值'])
+        for k, v in self._prediction_model_train.dataset_config.items():
+            self.dataset_table_model.appendRow([QStandardItem(str(k)), QStandardItem(str(v))])
 
     def open_model_config(self):
         config_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取配置文件", os.getcwd(), "config(*.yaml)")
@@ -52,6 +61,9 @@ class MainForm(QMainWindow, Ui_MainWindow):
         fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),
                                                                    "model(*.eam)")
 
+    def open_result_folder(self):
+        os.startfile(Path(self._prediction_model_train.save_path))
+
     def update_process(self, process):
         print(process)
         self.progressBar.setValue(process)
@@ -59,4 +71,3 @@ class MainForm(QMainWindow, Ui_MainWindow):
     def train_model(self):
         self._prediction_model_train.start()
 
-    conf_table_model = QStandardItemModel(4, 4)
