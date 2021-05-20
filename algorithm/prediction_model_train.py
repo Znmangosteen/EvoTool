@@ -65,8 +65,8 @@ class prediction_model_train(QThread):
 
         # X, y = df.iloc[:, 0:8], df.iloc[:, 8]
         # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-        X_train, y_train = self.train_dataset.iloc[:, 0:8], self.train_dataset.iloc[:, 8]
-        X_test, y_test = self.val_dataset.iloc[:, 0:8], self.val_dataset.iloc[:, 8]
+        X_train, y_train = self.train_dataset['x'], self.train_dataset['y']
+        X_test, y_test = self.val_dataset['x'], self.val_dataset['y']
         ss_x = StandardScaler()
 
         X_train = pd.DataFrame(ss_x.fit_transform(X_train.values), columns=X_train.columns)
