@@ -38,6 +38,8 @@ class prediction_model_train(QThread):
 
         self.save_path = ''
 
+        self.enable_feature_select = False
+
     def set_algo(self, algo):
         self.chosen_algo = self.algo_dict[algo]
 
@@ -78,17 +80,14 @@ class prediction_model_train(QThread):
 
         X_train_ori, X_test_ori, y_train_ori, y_test_ori = X_train, X_test, y_train, y_test
 
-        print("X_train Shape: ", X_train.shape)
-        print("X_test Shape: ", X_test.shape)
 
-        # 是否需要后向剔除参数寻找最优的组合
-        enable_feature_select = False
-
-        # 将参数写成字典
-        # 可以在此修改max_leaf_nodes和max_depth所要循环遍历的范围
 
         params = self.model_config
-        all_iter_para_name = ['max_leaf_nodes', 'max_depth']
+        all_iter_para_name=[]
+        for k,v in params.items():
+            if type(v) is list:
+                all_iter_para_name.append(k)
+        # all_iter_para_name = ['max_leaf_nodes', 'max_depth']
         all_iter_range = [params[_] for _ in all_iter_para_name]
 
         all_iter = [[]]
@@ -153,7 +152,7 @@ class prediction_model_train(QThread):
                 save_path = base_path
                 # base_path = save_path
 
-                if enable_feature_select:
+                if self.enable_feature_select:
                     save_path += '{}-feature'.format(f_num) + '/'
                     # pass
                 os.makedirs(save_path)
@@ -321,7 +320,7 @@ class prediction_model_train(QThread):
                 with open(save_path + 'y_pred_test.txt', 'w')as f:
                     f.write(_preds_test.__str__())
 
-                if not enable_feature_select:
+                if not self.enable_feature_select:
                     break
                 else:
                     selected_features = sorted_name[:f_num - 1]
@@ -329,21 +328,13 @@ class prediction_model_train(QThread):
                         X_train = X_train[selected_features]
                         X_test = X_test[selected_features]
 
-                        # rfr = RandomForestRegressor(n_estimators=params['n_estimators'],
-                        #                             max_leaf_nodes=params['max_leaf_nodes'],
-                        #                             max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
-                        #                             max_features=params['max_features'],
-                        #                             min_samples_split=params['min_samples_split'],
-                        #                             min_samples_leaf=params['min_samples_leaf'],
-                        #                             min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
-                        #                             random_state=params['random_state'])
                         rfr = RandomForestRegressor(**params)
 
                         rfr.fit(X_train, y_train)
 
                         # params['feature_num'] = f_num
 
-            if enable_feature_select:
+            if self.enable_feature_select:
                 # 使用不同特征的损失图
                 # 图的大小
                 plt.figure(figsize=(12, 10))
