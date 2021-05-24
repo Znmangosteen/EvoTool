@@ -22,19 +22,19 @@ from random_forest import random_forest_model
 
 
 class prediction_model_train(QThread):
-    algo_dict = {'lightgbm': lightgbm_model, '随机森林': random_forest_model}
+    algo_dict = {'lightgbm': lightgbm_model, 'random_forest': random_forest_model}
     process_signal = pyqtSignal(int)
 
     def __init__(self, **kwargs):
         super().__init__()
-        # self.dataset = ''
         self.dataset_config = {}
         self.train_dataset = pd.DataFrame()
         self.val_dataset = pd.DataFrame()
 
         self.set_dataset(**load_dataset('./dataset/emission.yaml'))
         self.chosen_algo = self.algo_dict['lightgbm']
-        self.model_config = load_config('./model_config/rf_config.yaml')
+        self.model_config = {}
+        self.set_model_config(load_config('./model_config/rf_config.yaml'))
 
         self.save_path = ''
 
@@ -52,22 +52,16 @@ class prediction_model_train(QThread):
         self.train_dataset = train_data
 
     def set_model_config(self, model_config):
+        self.set_algo(model_config['model_type'])
+        model_config.pop('model_type')
         self.model_config = model_config
+
 
     def run(self):
 
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
         plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
-        # plt.rcParams['font.sans-serif'] = ['SimHei']
-
-        # df = pd.read_csv(self.train_data, header=0, encoding='utf-8', engine='python')
-        # df = pd.read_excel(self.train_data)
-        # df = self.train_dataset
-        # data = df.iloc[:, 0:8]
-
-        # X, y = df.iloc[:, 0:8], df.iloc[:, 8]
-        # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         X_train, y_train = self.train_dataset['x'], self.train_dataset['y']
         X_test, y_test = self.val_dataset['x'], self.val_dataset['y']
         ss_x = StandardScaler()
@@ -80,14 +74,11 @@ class prediction_model_train(QThread):
 
         X_train_ori, X_test_ori, y_train_ori, y_test_ori = X_train, X_test, y_train, y_test
 
-
-
         params = self.model_config
-        all_iter_para_name=[]
-        for k,v in params.items():
+        all_iter_para_name = []
+        for k, v in params.items():
             if type(v) is list:
                 all_iter_para_name.append(k)
-        # all_iter_para_name = ['max_leaf_nodes', 'max_depth']
         all_iter_range = [params[_] for _ in all_iter_para_name]
 
         all_iter = [[]]
@@ -113,7 +104,6 @@ class prediction_model_train(QThread):
         rmse_lowest = float('inf')
         r_squre_best_path = ''
         r_square_highest = float('-inf')
-        # self.process_signal.emit(30)
 
         for c_time, c_para in enumerate(all_iter):
             for _, __ in zip(all_iter_para_name, c_para):
@@ -123,13 +113,6 @@ class prediction_model_train(QThread):
 
             X_train, X_test, y_train, y_test = X_train_ori, X_test_ori, y_train_ori, y_test_ori
 
-            # rfr = RandomForestRegressor(n_estimators=params['n_estimators'], max_leaf_nodes=params['max_leaf_nodes'],
-            #                             max_depth=params['max_depth'], ccp_alpha=params['ccp_alpha'],
-            #                             max_features=params['max_features'],
-            #                             min_samples_split=params['min_samples_split'],
-            #                             min_samples_leaf=params['min_samples_leaf'],
-            #                             min_weight_fraction_leaf=params['min_weight_fraction_leaf'],
-            #                             random_state=params['random_state'])
             rfr = RandomForestRegressor(**params)
             rfr.fit(X_train, y_train)
             print(rfr.n_estimators)
@@ -142,7 +125,7 @@ class prediction_model_train(QThread):
 
             sorted_importance = sorted(zip(feature_name, feature_importance_rank), key=lambda x: x[1], reverse=True)
             sorted_name = [_[0].replace("_", " ") for _ in sorted_importance]
-            sorted_importance_val = [float(_[1]) for _ in sorted_importance]
+            # sorted_importance_val = [float(_[1]) for _ in sorted_importance]
 
             base_path = folder_name + ''.join(
                 [_ + '-' + str(__) + '--' for _, __ in zip(all_iter_para_name, c_para)])
@@ -150,7 +133,6 @@ class prediction_model_train(QThread):
             for f_num in range(len(sorted_name), 0, -1):
 
                 save_path = base_path
-                # base_path = save_path
 
                 if self.enable_feature_select:
                     save_path += '{}-feature'.format(f_num) + '/'

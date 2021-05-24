@@ -10,6 +10,7 @@ import os
 from ui.main_page import Ui_MainWindow
 from pathlib import Path
 
+
 class MainForm(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super(MainForm, self).__init__()
@@ -24,7 +25,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
         self.prediction_config_btn.clicked.connect(self.open_model_config)
 
         self.conf_table_model = QStandardItemModel()
-        self.conf_table_model.setHorizontalHeaderLabels(['参数', '值'])
+        self.conf_table_model.setHorizontalHeaderLabels(['设定', '值'])
         self.config_table.setModel(self.conf_table_model)
 
         self.dataset_table_model = QStandardItemModel()
@@ -33,7 +34,8 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
         self.open_result_btn.clicked.connect(self.open_result_folder)
 
-        self.algo_select.activated[str].connect(self.change_algo)
+        # self.algo_select.activated[str].connect(self.change_algo)
+
     def open_dataset(self):
         # dataset_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取数据集", os.getcwd(),
         #                                                                "dataset(*.xlsx *.csv)")
@@ -50,13 +52,15 @@ class MainForm(QMainWindow, Ui_MainWindow):
     def open_model_config(self):
         config_name, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取配置文件", os.getcwd(), "config(*.yaml)")
 
-        if config_name:
-            self._prediction_model_train.set_model_config(load_config(config_name))
+        config = load_config(config_name)
 
         self.conf_table_model.clear()
-        self.conf_table_model.setHorizontalHeaderLabels(['参数', '值'])
-        for k, v in self._prediction_model_train.model_config.items():
+        self.conf_table_model.setHorizontalHeaderLabels(['设定', '值'])
+        for k, v in config.items():
             self.conf_table_model.appendRow([QStandardItem(str(k)), QStandardItem(str(v))])
+
+        if config_name:
+            self._prediction_model_train.set_model_config(config)
 
     def open_model(self):
         fileName, fileType = QtWidgets.QFileDialog.getOpenFileName(self, "选取文件", os.getcwd(),
@@ -72,8 +76,6 @@ class MainForm(QMainWindow, Ui_MainWindow):
     def train_model(self):
         self._prediction_model_train.start()
 
-    def change_algo(self,selected_algo):
-        self._prediction_model_train.set_algo(selected_algo)
-        print(selected_algo)
-
-
+    # def change_algo(self,selected_algo):
+    #     self._prediction_model_train.set_algo(selected_algo)
+    #     print(selected_algo)
