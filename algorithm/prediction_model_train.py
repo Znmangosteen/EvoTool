@@ -62,16 +62,16 @@ class prediction_model_train(QThread):
         plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
         X_train, y_train = self.train_dataset['x'], self.train_dataset['y']
-        X_test, y_test = self.val_dataset['x'], self.val_dataset['y']
+        X_val, y_val = self.val_dataset['x'], self.val_dataset['y']
         ss_x = StandardScaler()
 
         X_train = pd.DataFrame(ss_x.fit_transform(X_train.values), columns=X_train.columns)
-        X_test = pd.DataFrame(ss_x.fit_transform(X_test.values), columns=X_train.columns)
+        X_val = pd.DataFrame(ss_x.fit_transform(X_val.values), columns=X_train.columns)
         ss_y = StandardScaler()
         y_train = pd.DataFrame(ss_y.fit_transform(y_train.values.reshape(-1, 1)))
-        y_test = pd.DataFrame(ss_y.transform(y_test.values.reshape(-1, 1)))
+        y_val = pd.DataFrame(ss_y.transform(y_val.values.reshape(-1, 1)))
 
-        X_train_ori, X_test_ori, y_train_ori, y_test_ori = X_train, X_test, y_train, y_test
+        X_train_ori, X_val_ori, y_train_ori, y_val_ori = X_train, X_val, y_train, y_val
 
         params = self.model_config
         all_iter_para_name = []
@@ -110,19 +110,18 @@ class prediction_model_train(QThread):
             rmse_list = []
             r_squre_list = []
 
-            X_train, X_test, y_train, y_test = X_train_ori, X_test_ori, y_train_ori, y_test_ori
+            X_train, X_val, y_train, y_val = X_train_ori, X_val_ori, y_train_ori, y_val_ori
 
             # rfr = RandomForestRegressor(**params)
             # rfr.fit(X_train, y_train)
             # print(rfr.n_estimators)
 
             model = self.chosen_algo(params)
-            rmse_train, r2_train = model.train(X_train, y_train)
+            rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train, X_val, y_val)
 
             # 储存结果
             # 保存路径，根据当前时间创建一个文件夹
 
-            # feature_importance_rank = rfr.feature_importances_
             feature_importance_rank = model.get_feature_importance()
 
             feature_name = self.dataset_config['feature_columns']
@@ -142,12 +141,10 @@ class prediction_model_train(QThread):
                     save_path += '{}-feature'.format(f_num) + '/'
                 os.makedirs(save_path)
 
-                rmse, r2 = eval_model(rfr, X_test, y_test)
+                # rmse, r2 = eval_model(rfr, X_val, y_val)
+                rmse, r2 = rmse_val[-1], r2_val[-1]
                 rmse_list = [rmse] + rmse_list
                 r_squre_list = [r2] + r_squre_list
-
-                preds_train = rfr.predict(X_train)
-                preds_test = rfr.predict(X_test)
 
                 if rmse < rmse_lowest:
                     rmse_best_path = save_path
@@ -157,7 +154,7 @@ class prediction_model_train(QThread):
                     r_squre_best_path = save_path
                     r_square_highest = r2
 
-                feature_importance_rank = rfr.feature_importances_
+                feature_importance_rank = model.get_feature_importance()
                 feature_name = X_train.columns
 
                 sorted_importance = sorted(zip(feature_name, feature_importance_rank), key=lambda x: x[1], reverse=True)
@@ -182,23 +179,6 @@ class prediction_model_train(QThread):
                 plt.ioff()
                 plt.savefig(save_path + 'importance.png')
 
-                rmse_train = []
-                rmse_test = []
-                r2_train = []
-                r2_test = []
-
-                # rfr_eval = copy.deepcopy(rfr)
-
-                for i in range(params['n_estimators']):
-                    rmse, r2 = eval_model(rfr, X_train, y_train)
-                    rmse_train = [rmse] + rmse_train
-                    r2_train = [r2] + r2_train
-
-                    rmse, r2 = eval_model(rfr, X_test, y_test)
-                    rmse_test = [rmse] + rmse_test
-                    r2_test = [r2] + r2_test
-
-                    rfr.estimators_ = rfr.estimators_[:-1]
 
                 # 图的大小
                 fig = plt.figure(figsize=(12, 10))
@@ -209,12 +189,12 @@ class prediction_model_train(QThread):
 
                 ax1 = fig.add_subplot(111)
                 ax1.plot(rmse_train, 'r-', label='rmse training')
-                ax1.plot(rmse_test, 'b-', label='rmse valid')
+                ax1.plot(rmse_val, 'b-', label='rmse valid')
                 ax1.set_ylabel('rmse')
 
                 ax2 = ax1.twinx()
                 ax2.plot(r2_train, 'y-', label='$R^2$ training')
-                ax2.plot(r2_test, 'g-', label='$R^2$ valid')
+                ax2.plot(r2_val, 'g-', label='$R^2$ valid')
                 ax2.set_ylabel('$R^2$')
 
                 handles1, labels1 = ax1.get_legend_handles_labels()
@@ -237,6 +217,9 @@ class prediction_model_train(QThread):
                 # 设置坐标标签字体大小
                 plt.xlabel('Sample Number', fontsize=30)
                 plt.ylabel('Label', fontsize=30)
+
+                preds_train = model.predict(X_train)
+                preds_val = model.predict(X_val)
 
                 _preds_train, _y_train = ss_y.inverse_transform(preds_train.reshape(-1)), ss_y.inverse_transform(
                     np.array(y_train).reshape(-1))
@@ -271,9 +254,9 @@ class prediction_model_train(QThread):
                 plt.xticks(fontsize=30)
                 plt.yticks(fontsize=30)
 
-                _preds_test, _y_test = ss_y.inverse_transform(preds_test.reshape(-1)), ss_y.inverse_transform(
-                    np.array(y_test).reshape(-1))
-                _rmse_test, _r2_test = np.square(mean_squared_error(y_test, preds_test)), r2_score(_y_test, _preds_test)
+                _preds_test, _y_test = ss_y.inverse_transform(preds_val.reshape(-1)), ss_y.inverse_transform(
+                    np.array(y_val).reshape(-1))
+                _rmse_test, _r2_test = np.square(mean_squared_error(y_val, preds_val)), r2_score(_y_test, _preds_test)
 
                 plt.title(
                     'Comparison of validating set prediction results\n rmse={} $R^2$={}'.format(round(_rmse_test, 3),
@@ -282,9 +265,9 @@ class prediction_model_train(QThread):
 
                 # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
                 # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
-                plt.plot(ss_y.inverse_transform(preds_test.reshape(-1)), marker='x', linestyle='-', color='b',
+                plt.plot(ss_y.inverse_transform(preds_val.reshape(-1)), marker='x', linestyle='-', color='b',
                          label='predict label')
-                plt.plot(ss_y.inverse_transform(np.array(y_test).reshape(-1)), marker='x', linestyle='--', color='r',
+                plt.plot(ss_y.inverse_transform(np.array(y_val).reshape(-1)), marker='x', linestyle='--', color='r',
                          label='true label')
                 # 图例字体大小设置
                 plt.legend(fontsize=20, loc='upper right')
@@ -311,11 +294,14 @@ class prediction_model_train(QThread):
                     selected_features = sorted_name[:f_num - 1]
                     if selected_features:
                         X_train = X_train[selected_features]
-                        X_test = X_test[selected_features]
+                        X_val = X_val[selected_features]
 
-                        rfr = RandomForestRegressor(**params)
+                        # model = RandomForestRegressor(**params)
+                        #
+                        # model.fit(X_train, y_train)
 
-                        rfr.fit(X_train, y_train)
+                        model = self.chosen_algo(params)
+                        rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train)
 
                         # params['feature_num'] = f_num
 
