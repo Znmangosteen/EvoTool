@@ -3,7 +3,7 @@ import random
 
 import yaml
 
-from lightgbm import lightgbm_model
+from lightgbm_encap import lightgbm_model
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
@@ -18,7 +18,7 @@ from load_tools import *
 import os
 
 from mertric import eval_model
-from random_forest import random_forest_model
+from random_forest_encap import random_forest_model
 
 
 class prediction_model_train(QThread):
