@@ -32,7 +32,7 @@ class prediction_model_train(QThread):
         self.val_dataset = pd.DataFrame()
 
         self.set_dataset(**load_dataset('./dataset/emission.yaml'))
-        self.chosen_algo = self.algo_dict['lightgbm']
+        self.chosen_algo = self.algo_dict['random_forest']
         self.model_config = {}
         self.set_model_config(load_config('./model_config/rf_config.yaml'))
 
@@ -55,7 +55,6 @@ class prediction_model_train(QThread):
         self.set_algo(model_config['model_type'])
         model_config.pop('model_type')
         self.model_config = model_config
-
 
     def run(self):
 
@@ -113,14 +112,19 @@ class prediction_model_train(QThread):
 
             X_train, X_test, y_train, y_test = X_train_ori, X_test_ori, y_train_ori, y_test_ori
 
-            rfr = RandomForestRegressor(**params)
-            rfr.fit(X_train, y_train)
-            print(rfr.n_estimators)
+            # rfr = RandomForestRegressor(**params)
+            # rfr.fit(X_train, y_train)
+            # print(rfr.n_estimators)
+
+            model = self.chosen_algo(params)
+            rmse_train, r2_train = model.train(X_train, y_train)
 
             # 储存结果
             # 保存路径，根据当前时间创建一个文件夹
 
-            feature_importance_rank = rfr.feature_importances_
+            # feature_importance_rank = rfr.feature_importances_
+            feature_importance_rank = model.get_feature_importance()
+
             feature_name = self.dataset_config['feature_columns']
 
             sorted_importance = sorted(zip(feature_name, feature_importance_rank), key=lambda x: x[1], reverse=True)
@@ -136,7 +140,6 @@ class prediction_model_train(QThread):
 
                 if self.enable_feature_select:
                     save_path += '{}-feature'.format(f_num) + '/'
-                    # pass
                 os.makedirs(save_path)
 
                 rmse, r2 = eval_model(rfr, X_test, y_test)
