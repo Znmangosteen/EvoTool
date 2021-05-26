@@ -35,8 +35,6 @@ class random_forest_model(prediction_model):
 
 
 
-    def predict(self, X):
-        return self.model.predict(X)
 
     def get_feature_importance(self):
         return self.model.feature_importances_

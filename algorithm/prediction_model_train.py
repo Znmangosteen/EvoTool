@@ -38,7 +38,7 @@ class prediction_model_train(QThread):
 
         self.save_path = ''
 
-        self.enable_feature_select = False
+        self.enable_feature_select = True
 
     def set_algo(self, algo):
         self.chosen_algo = self.algo_dict[algo]
@@ -179,7 +179,6 @@ class prediction_model_train(QThread):
                 plt.ioff()
                 plt.savefig(save_path + 'importance.png')
 
-
                 # 图的大小
                 fig = plt.figure(figsize=(12, 10))
                 # 颜色线性请自己调整
@@ -301,7 +300,7 @@ class prediction_model_train(QThread):
                         # model.fit(X_train, y_train)
 
                         model = self.chosen_algo(params)
-                        rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train)
+                        rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train, X_val, y_val)
 
                         # params['feature_num'] = f_num
 
