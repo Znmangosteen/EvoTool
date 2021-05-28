@@ -95,7 +95,7 @@ class prediction_model_train(QThread):
         print(all_iter)
 
         # 用当前时间作为储存结果文件夹的名字
-        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-') + '  ' + str(random.randint(10, 99))
+        folder_name = time.asctime(time.localtime(time.time())).replace(':', '-')
         folder_name = './run/prediction/{}/'.format(folder_name)
         self.save_path = folder_name
 

@@ -18,7 +18,6 @@ class random_forest_model(prediction_model):
         r2_train = []
         r2_val = []
 
-        # rfr_eval = copy.deepcopy(rfr)
         es_bk = self.model.estimators_
         for i in range(len(self.model.estimators_)):
             rmse, r2 = eval_model(self, X_train, y_train)
