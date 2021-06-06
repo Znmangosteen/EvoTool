@@ -1,15 +1,16 @@
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 
 from mertric import eval_model
 from prediction_model import prediction_model
 
 
 class random_forest_model(prediction_model):
+    MODEL_POLL = {'regression': RandomForestRegressor, 'classification': RandomForestClassifier}
 
-    def __init__(self, params):
+    def __init__(self, params, model_type='regression'):
         super(random_forest_model, self).__init__()
         self.params = params
-        self.model = RandomForestRegressor(**params)
+        self.model = self.MODEL_POLL[model_type](**params)
 
     def train(self, X_train, y_train, X_val=None, y_val=None):
         self.model.fit(X_train, y_train)
@@ -31,9 +32,6 @@ class random_forest_model(prediction_model):
             self.model.estimators_ = self.model.estimators_[:-1]
         self.model.estimators_ = es_bk
         return rmse_train, r2_train, rmse_val, r2_val
-
-
-
 
     def get_feature_importance(self):
         return self.model.feature_importances_

@@ -1,0 +1,8 @@
+train_dataset: './dataset/Surgical-deepnet.csv'
+val_dataset: ''
+split_dataset: True
+test_size: 0.2
+use_random_seed: True
+random_state: ~
+feature_columns: [bmi,Age,asa_status,baseline_cancer,baseline_charlson,baseline_cvd,baseline_dementia,baseline_diabetes,baseline_digestive,baseline_osteoart,baseline_psych,baseline_pulmonary,ahrq_ccs,ccsComplicationRate,ccsMort30Rate,complication_rsi,dow,gender,hour,month,moonphase,mort30,mortality_rsi,race]
+output_column: complication
