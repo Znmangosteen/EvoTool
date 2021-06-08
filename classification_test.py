@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from load_tools import *
 import os
 from random_forest_encap import random_forest_model
-
+import seaborn as sns
 
 class class_test_class():
     algo_dict = {'lightgbm': lightgbm_model, 'random_forest': random_forest_model, }
@@ -86,25 +86,22 @@ class class_test_class():
         folder_name = './run/prediction/{}/'.format(folder_name)
         self.save_path = folder_name
 
-        rmse_best_path = ''
-        rmse_lowest = float('inf')
+        accuracy_best_path = ''
+        accuracy_lowest = float('inf')
         r_squre_best_path = ''
         r_square_highest = float('-inf')
 
         for c_time, c_para in enumerate(all_iter):
             for _, __ in zip(all_iter_para_name, c_para):
                 params[_] = __
-            rmse_list = []
+            accuracy_list = []
             r_squre_list = []
 
             X_train, X_val, y_train, y_val = X_train_ori, X_val_ori, y_train_ori, y_val_ori
 
-            # rfr = RandomForestRegressor(**params)
-            # rfr.fit(X_train, y_train)
-            # print(rfr.n_estimators)
 
             model = self.chosen_algo(params, 'classification')
-            rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train, X_val, y_val)
+            accuracy_train, r2_train, accuracy_val, r2_val = model.train(X_train, y_train, X_val, y_val)
 
             # 储存结果
             # 保存路径，根据当前时间创建一个文件夹
@@ -129,18 +126,18 @@ class class_test_class():
                     save_path += '{}-feature'.format(f_num) + '/'
                 os.makedirs(save_path)
 
-                # rmse, r2 = eval_model(rfr, X_val, y_val)
-                rmse, r2 = rmse_val[-1], r2_val[-1]
-                rmse_list = [rmse] + rmse_list
+                # accuracy, r2 = eval_model(rfr, X_val, y_val)
+                accuracy, r2 = accuracy_val[-1], r2_val[-1]
+                accuracy_list = [accuracy] + accuracy_list
                 r_squre_list = [r2] + r_squre_list
 
-                if rmse < rmse_lowest:
-                    rmse_best_path = save_path
-                    rmse_lowest = rmse
+                if accuracy < accuracy_lowest:
+                    accuracy_best_path = save_path
+                    accuracy_lowest = accuracy
 
-                if r2 > r_square_highest:
-                    r_squre_best_path = save_path
-                    r_square_highest = r2
+                # if r2 > r_square_highest:
+                #     r_squre_best_path = save_path
+                #     r_square_highest = r2
 
                 feature_importance_rank = model.get_feature_importance()
                 feature_name = X_train.columns
@@ -150,8 +147,20 @@ class class_test_class():
                 sorted_name = [_[0] for _ in sorted_importance]
                 sorted_importance_val = [float(_[1]) for _ in sorted_importance]
 
-                plt.ioff()
 
+
+                plt.ioff()
+                sns.set()
+                f, ax = plt.subplots()
+                # print(r2)
+                sns.heatmap(r2,cmap='Blues')
+                ax.set_title('confusion matrix')  # 标题
+                ax.set_xlabel('predict')  # x轴
+                ax.set_ylabel('true')  # y轴
+                plt.savefig(save_path + 'confusion.png')
+
+
+                plt.ioff()
                 # 调整图的大小
                 fig = plt.figure(figsize=(20, 10))
                 # 设置刻度字体大小
@@ -176,18 +185,19 @@ class class_test_class():
                 plt.xlabel('iterations')
 
                 ax1 = fig.add_subplot(111)
-                ax1.plot(rmse_train, 'r-', label='rmse training')
-                ax1.plot(rmse_val, 'b-', label='rmse valid')
-                ax1.set_ylabel('rmse')
+                ax1.plot(accuracy_train, 'r-', label='accuracy training')
+                ax1.plot(accuracy_val, 'b-', label='accuracy valid')
+                ax1.set_ylabel('accuracy')
 
-                ax2 = ax1.twinx()
-                ax2.plot(r2_train, 'y-', label='$R^2$ training')
-                ax2.plot(r2_val, 'g-', label='$R^2$ valid')
-                ax2.set_ylabel('$R^2$')
+                # ax2 = ax1.twinx()
+                # ax2.plot(r2_train, 'y-', label='$R^2$ training')
+                # ax2.plot(r2_val, 'g-', label='$R^2$ valid')
+                # ax2.set_ylabel('$R^2$')
 
                 handles1, labels1 = ax1.get_legend_handles_labels()
-                handles2, labels2 = ax2.get_legend_handles_labels()
-                plt.legend(handles1 + handles2, labels1 + labels2, loc='right')
+                # handles2, labels2 = ax2.get_legend_handles_labels()
+                # plt.legend(handles1 + handles2, labels1 + labels2, loc='right')
+                plt.legend(handles1 , labels1 , loc='right')
 
                 # plt.show()
                 # plt.close(fig)
@@ -203,67 +213,67 @@ class class_test_class():
                 plt.xticks(fontsize=30)
                 plt.yticks(fontsize=30)
                 # 设置坐标标签字体大小
-                plt.xlabel('Sample Number', fontsize=30)
-                plt.ylabel('Label', fontsize=30)
+                # plt.xlabel('Sample Number', fontsize=30)
+                # plt.ylabel('Label', fontsize=30)
 
                 preds_train = model.predict(X_train)
                 preds_val = model.predict(X_val)
-
+                #
                 _preds_train, _y_train = preds_train.reshape(-1), np.array(y_train).reshape(-1)
-                _rmse_train, _r2_train = np.square(mean_squared_error(y_train, preds_train)), r2_score(_y_train,
+                _accuracy_train, _r2_train = np.square(mean_squared_error(y_train, preds_train)), r2_score(_y_train,
                                                                                                        _preds_train)
-
-                plt.title(
-                    'Comparison of training set prediction results\n rmse={} $R^2$={}'.format(round(_rmse_train, 3),
-                                                                                              round(_r2_train, 3)),
-                    fontsize=30)
-
-                # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
-                # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
-                plt.plot(_preds_train, marker='x', linestyle='-', color='b',
-                         label='predict label')
-                plt.plot(_y_train, marker='x', linestyle='--', color='r',
-                         label='true label')
-                # 图例字体大小设置
-                plt.legend(fontsize=20, loc='upper right')
-
-                # 保存图片或者显示图片之后会清空当前画布，想要又保存又显示的话需要把上面的画图代码再写一遍
-                # 保存图片，可以修改保存的文件名
-                # plt.show()
-                # plt.close(fig)
-                plt.ioff()
-                plt.savefig(save_path + 'compare_train.png')
-
-                # 这张图要画的点比较宽，为了美观和清晰度可以根据实际情况调整一下图的尺寸，如下；另外把图调大了之后可能字会看起来小，也需要调整一下字的大小
-                # 调整图的大小
-                fig = plt.figure(figsize=(20, 10))
-                # 设置刻度字体大小
-                plt.xticks(fontsize=30)
-                plt.yticks(fontsize=30)
+                #
+                # plt.title(
+                #     'Comparison of training set prediction results\n accuracy={} $R^2$={}'.format(round(_accuracy_train, 3),
+                #                                                                               round(_r2_train, 3)),
+                #     fontsize=30)
+                #
+                # # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
+                # # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
+                # plt.plot(_preds_train, marker='x', linestyle='-', color='b',
+                #          label='predict label')
+                # plt.plot(_y_train, marker='x', linestyle='--', color='r',
+                #          label='true label')
+                # # 图例字体大小设置
+                # plt.legend(fontsize=20, loc='upper right')
+                #
+                # # 保存图片或者显示图片之后会清空当前画布，想要又保存又显示的话需要把上面的画图代码再写一遍
+                # # 保存图片，可以修改保存的文件名
+                # # plt.show()
+                # # plt.close(fig)
+                # plt.ioff()
+                # plt.savefig(save_path + 'compare_train.png')
+                #
+                # # 这张图要画的点比较宽，为了美观和清晰度可以根据实际情况调整一下图的尺寸，如下；另外把图调大了之后可能字会看起来小，也需要调整一下字的大小
+                # # 调整图的大小
+                # fig = plt.figure(figsize=(20, 10))
+                # # 设置刻度字体大小
+                # plt.xticks(fontsize=30)
+                # plt.yticks(fontsize=30)
 
                 _preds_test, _y_test = preds_val.reshape(-1), np.array(y_val).reshape(-1)
-                _rmse_test, _r2_test = np.square(mean_squared_error(y_val, preds_val)), r2_score(_y_test, _preds_test)
+                _accuracy_test, _r2_test = np.square(mean_squared_error(y_val, preds_val)), r2_score(_y_test, _preds_test)
 
-                plt.title(
-                    'Comparison of validating set prediction results\n rmse={} $R^2$={}'.format(round(_rmse_test, 3),
-                                                                                                round(_r2_test, 3)),
-                    fontsize=30)
-
-                # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
-                # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
-                plt.plot(_preds_test, marker='x', linestyle='-', color='b',
-                         label='predict label')
-                plt.plot(_y_test, marker='x', linestyle='--', color='r',
-                         label='true label')
-                # 图例字体大小设置
-                plt.legend(fontsize=20, loc='upper right')
-
-                # 保存图片或者显示图片之后会清空当前画布，想要又保存又显示的话需要把上面的画图代码再写一遍
-                # 保存图片，可以修改保存的文件名
-                # plt.show()
-                # plt.close(fig)
-                plt.ioff()
-                plt.savefig(save_path + 'compare_test.png')
+                # plt.title(
+                #     'Comparison of validating set prediction results\n accuracy={} $R^2$={}'.format(round(_accuracy_test, 3),
+                #                                                                                 round(_r2_test, 3)),
+                #     fontsize=30)
+                #
+                # # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
+                # # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
+                # plt.plot(_preds_test, marker='x', linestyle='-', color='b',
+                #          label='predict label')
+                # plt.plot(_y_test, marker='x', linestyle='--', color='r',
+                #          label='true label')
+                # # 图例字体大小设置
+                # plt.legend(fontsize=20, loc='upper right')
+                #
+                # # 保存图片或者显示图片之后会清空当前画布，想要又保存又显示的话需要把上面的画图代码再写一遍
+                # # 保存图片，可以修改保存的文件名
+                # # plt.show()
+                # # plt.close(fig)
+                # plt.ioff()
+                # plt.savefig(save_path + 'compare_test.png')
 
                 # break
 
@@ -287,7 +297,7 @@ class class_test_class():
                         # model.fit(X_train, y_train)
 
                         model = self.chosen_algo(params,'classification')
-                        rmse_train, r2_train, rmse_val, r2_val = model.train(X_train, y_train, X_val, y_val)
+                        accuracy_train, r2_train, accuracy_val, r2_val = model.train(X_train, y_train, X_val, y_val)
 
                         # params['feature_num'] = f_num
 
@@ -302,21 +312,22 @@ class class_test_class():
                 plt.xlabel('feature number')
 
                 ax1 = fig.add_subplot(111)
-                ax1.plot(rmse_list, 'r-', label='rmse')
-                ax1.set_ylabel('rmse')
+                ax1.plot(accuracy_list, 'r-', label='accuracy')
+                ax1.set_ylabel('accuracy')
 
-                ax2 = ax1.twinx()
-                ax2.plot(r_squre_list, 'y-', label='$R^2$')
-                ax2.set_ylabel('$R^2$')
-
+                # ax2 = ax1.twinx()
+                # ax2.plot(r_squre_list, 'y-', label='$R^2$')
+                # ax2.set_ylabel('$R^2$')
+                #
                 handles1, labels1 = ax1.get_legend_handles_labels()
-                handles2, labels2 = ax2.get_legend_handles_labels()
-                plt.legend(handles1 + handles2, labels1 + labels2, loc='right')
+                # handles2, labels2 = ax2.get_legend_handles_labels()
+                # plt.legend(handles1 + handles2, labels1 + labels2, loc='right')
+                plt.legend(handles1 , labels1 , loc='right')
 
                 plt.savefig(base_path + 'Features_loss.png')
 
-        shutil.copytree(rmse_best_path, folder_name + 'rmse_best/')
-        shutil.copytree(r_squre_best_path, folder_name + 'r_squre_best/')
+        shutil.copytree(accuracy_best_path, folder_name + 'accuracy_best/')
+        # shutil.copytree(r_squre_best_path, folder_name + 'r_squre_best/')
 
 
 if __name__ == '__main__':
