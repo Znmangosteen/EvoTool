@@ -1,4 +1,5 @@
 # from PyQt5.QtCore import pyqtSignal, QThread
+import pickle
 import random
 
 import yaml
@@ -19,10 +20,11 @@ import os
 
 from mertric import eval_model
 from random_forest_encap import random_forest_model
+from algorithms import ALGO_DICT
 
 
 class prediction_model_train(QThread):
-    algo_dict = {'lightgbm': lightgbm_model, 'random_forest': random_forest_model}
+    # algo_dict = {'lightgbm': lightgbm_model, 'random_forest': random_forest_model}
     process_signal = pyqtSignal(int)
 
     def __init__(self, **kwargs):
@@ -32,7 +34,7 @@ class prediction_model_train(QThread):
         self.val_dataset = pd.DataFrame()
 
         self.set_dataset(**load_dataset('./dataset/emission.yaml'))
-        self.chosen_algo = self.algo_dict['random_forest']
+        self.chosen_algo = ALGO_DICT['random_forest']
         self.model_config = {}
         self.set_model_config(load_config('./model_config/rf_config.yaml'))
 
@@ -41,7 +43,7 @@ class prediction_model_train(QThread):
         self.enable_feature_select = True
 
     def set_algo(self, algo):
-        self.chosen_algo = self.algo_dict[algo]
+        self.chosen_algo = ALGO_DICT[algo]
 
     def set_dataset(self, dataset_config, train_dataset, val_dataset):
         self.dataset_config = dataset_config
@@ -55,6 +57,10 @@ class prediction_model_train(QThread):
         self.set_algo(model_config['model_type'])
         model_config.pop('model_type')
         self.model_config = model_config
+
+    def save_model(self, model, path):
+        with open(path, 'wb') as f:
+            pickle.dump(model, f)
 
     def run(self):
 
@@ -140,6 +146,8 @@ class prediction_model_train(QThread):
                 if self.enable_feature_select:
                     save_path += '{}-feature'.format(f_num) + '/'
                 os.makedirs(save_path)
+
+                self.save_model(model, save_path + 'model.et')
 
                 # rmse, r2 = eval_model(rfr, X_val, y_val)
                 rmse, r2 = rmse_val[-1], r2_val[-1]
