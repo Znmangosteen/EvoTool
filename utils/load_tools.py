@@ -1,3 +1,5 @@
+import pickle
+
 import yaml
 from PyQt5.QtWidgets import *
 from PyQt5 import QtWidgets
@@ -51,6 +53,14 @@ def load_config(config_name):
     except Exception as e:
         print(e)
         print('模型配置加载失败')
+
+def load_model(model_name):
+    try:
+        with open(model_name, 'rb') as f:
+            return pickle.load(f)
+    except Exception as e:
+        print(e)
+        print('模型加载失败')
 
 # def open_file(self):
 #     # print('123')

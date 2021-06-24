@@ -17,5 +17,8 @@ class lightgbm_model(prediction_model):
         return evals_result['training']['rmse'], evals_result['training']['r_square'], evals_result['valid_1']['rmse'], \
                evals_result['valid_1']['r_square']
 
+    def predict(self, x):
+        self.model.predict(x,)
+
     def get_feature_importance(self,):
         return self.model.feature_importances_

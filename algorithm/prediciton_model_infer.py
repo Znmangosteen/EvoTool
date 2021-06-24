@@ -23,7 +23,7 @@ from mertric import eval_model
 from random_forest_encap import random_forest_model
 
 
-class prediction_model_train(QThread):
+class prediction_model_infer(QThread):
     process_signal = pyqtSignal(int)
 
     def __init__(self, **kwargs):
@@ -32,25 +32,23 @@ class prediction_model_train(QThread):
         self.dataset = pd.DataFrame()
 
         self.set_dataset(**load_dataset('./dataset/emission.yaml'))
-        self.chosen_algo = self.ALGO_DICT['random_forest']
-        self.model_config = {}
-        self.set_model_config(load_config('./model_config/rf_config.yaml'))
+        # self.chosen_algo = self.ALGO_DICT['random_forest']
+        self.model = None
+        # self.set_model_config(load_config('./model_config/rf_config.yaml'))
 
         self.save_path = ''
-
-        self.enable_feature_select = True
 
     def set_algo(self, algo):
         self.chosen_algo = ALGO_DICT[algo]
 
-    def load_model(self, path):
-        with open(path, 'rb') as f:
-            return pickle.load(f)
+    def set_model(self, model):
+        self.model = model
 
     def set_dataset(self, dataset_config, dataset):
         self.dataset_config = dataset_config
         self.dataset = dataset
 
-    def infer(self):
+    def run(self):
         data = self.dataset
         self.model.predict(data)
+        self.process_signal.emit(100)
