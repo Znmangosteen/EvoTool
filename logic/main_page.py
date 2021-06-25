@@ -24,7 +24,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.open_dataset_btn.clicked.connect(self.open_dataset)
         self.open_dataset_btn_2.clicked.connect(self.open_dataset_infer)
-        self.open_model_btn.clicked.connect(self.open_model)
+        self.load_model_btn.clicked.connect(self.open_model)
         self.train_btn.clicked.connect(self.train_model)
         self.prediction_config_btn.clicked.connect(self.open_model_config)
 
