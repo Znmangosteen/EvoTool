@@ -31,7 +31,7 @@ class prediction_model_infer(QThread):
         self.dataset_config = {}
         self.dataset = pd.DataFrame()
 
-        self.set_dataset(**load_dataset('./dataset/emission.yaml'))
+        # self.set_dataset(**load_dataset('./dataset/emission.yaml'))
         # self.chosen_algo = self.ALGO_DICT['random_forest']
         self.model = None
         # self.set_model_config(load_config('./model_config/rf_config.yaml'))
