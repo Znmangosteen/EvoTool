@@ -10,7 +10,7 @@ import os
 import pandas as pd
 
 
-def load_dataset(dataset_config_name):
+def load_train_dataset(dataset_config_name):
     try:
         with open(dataset_config_name, encoding='utf-8') as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
@@ -45,6 +45,30 @@ def load_dataset(dataset_config_name):
         print('数据加载失败')
 
 
+def load_infer_dataset(dataset_config_name):
+    try:
+        with open(dataset_config_name, encoding='utf-8') as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+
+        dataset_name = config['dataset']
+        if dataset_name.endswith('xlsx'):
+            dataset = pd.read_excel(dataset_name)
+        elif dataset_name.endswith('csv'):
+            dataset = pd.read_csv(dataset_name)
+        else:
+            print('不支持的数据类型')
+            assert 0
+
+        dataset = {'x': dataset[config['feature_columns']],
+                   'y': '' if config['output_column'] is None else dataset[config['output_column']]}
+        return {'dataset_config': config, 'dataset': dataset, }
+
+
+    except Exception as e:
+        print(e)
+        print('数据加载失败')
+
+
 def load_config(config_name):
     try:
         with open(config_name, encoding='utf-8') as f:
@@ -53,6 +77,7 @@ def load_config(config_name):
     except Exception as e:
         print(e)
         print('模型配置加载失败')
+
 
 def load_model(model_name):
     try:

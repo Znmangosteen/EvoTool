@@ -33,14 +33,15 @@ class prediction_model_train(QThread):
         self.train_dataset = pd.DataFrame()
         self.val_dataset = pd.DataFrame()
 
-        self.set_dataset(**load_dataset('./dataset/emission.yaml'))
+        self.set_dataset(**load_train_dataset('./dataset/emission_2.yaml'))
         self.chosen_algo = ALGO_DICT['random_forest']
         self.model_config = {}
         self.set_model_config(load_config('./model_config/rf_config.yaml'))
 
         self.save_path = ''
 
-        self.enable_feature_select = True
+        self.enable_feature_select = False
+
 
     def set_algo(self, algo):
         self.chosen_algo = ALGO_DICT[algo]
@@ -67,15 +68,15 @@ class prediction_model_train(QThread):
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
         plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
-        X_train, y_train = self.train_dataset['x'], self.train_dataset['y']
-        X_val, y_val = self.val_dataset['x'], self.val_dataset['y']
-        ss_x = StandardScaler()
-
-        X_train = pd.DataFrame(ss_x.fit_transform(X_train.values), columns=X_train.columns)
-        X_val = pd.DataFrame(ss_x.fit_transform(X_val.values), columns=X_train.columns)
-        ss_y = StandardScaler()
-        y_train = pd.DataFrame(ss_y.fit_transform(y_train.values.reshape(-1, 1)))
-        y_val = pd.DataFrame(ss_y.transform(y_val.values.reshape(-1, 1)))
+        X_train, y_train = self.train_dataset['x'], self.train_dataset['y'].values.reshape(-1, 1)
+        X_val, y_val = self.val_dataset['x'], self.val_dataset['y'].values.reshape(-1, 1)
+        # ss_x = StandardScaler()
+        # ss_x.transform()
+        # X_train = pd.DataFrame(ss_x.fit_transform(X_train.values), columns=X_train.columns)
+        # X_val = pd.DataFrame(ss_x.fit_transform(X_val.values), columns=X_train.columns)
+        # ss_y = StandardScaler()
+        # y_train = pd.DataFrame(ss_y.fit_transform(y_train.values.reshape(-1, 1)))
+        # y_val = pd.DataFrame(ss_y.transform(y_val.values.reshape(-1, 1)))
 
         X_train_ori, X_val_ori, y_train_ori, y_val_ori = X_train, X_val, y_train, y_val
 
@@ -147,7 +148,7 @@ class prediction_model_train(QThread):
                     save_path += '{}-feature'.format(f_num) + '/'
                 os.makedirs(save_path)
 
-                self.save_model(model, save_path + 'model.et')
+                self.save_model(model, save_path + 'model.eam')
 
                 # rmse, r2 = eval_model(rfr, X_val, y_val)
                 rmse, r2 = rmse_val[-1], r2_val[-1]
@@ -228,8 +229,9 @@ class prediction_model_train(QThread):
                 preds_train = model.predict(X_train)
                 preds_val = model.predict(X_val)
 
-                _preds_train, _y_train = ss_y.inverse_transform(preds_train.reshape(-1)), ss_y.inverse_transform(
-                    np.array(y_train).reshape(-1))
+                _preds_train, _y_train=preds_train,y_train
+                # _preds_train, _y_train = ss_y.inverse_transform(preds_train.reshape(-1)), ss_y.inverse_transform(
+                #     np.array(y_train).reshape(-1))
                 _rmse_train, _r2_train = np.square(mean_squared_error(y_train, preds_train)), r2_score(_y_train,
                                                                                                        _preds_train)
 
@@ -261,8 +263,10 @@ class prediction_model_train(QThread):
                 plt.xticks(fontsize=30)
                 plt.yticks(fontsize=30)
 
-                _preds_test, _y_test = ss_y.inverse_transform(preds_val.reshape(-1)), ss_y.inverse_transform(
-                    np.array(y_val).reshape(-1))
+                _preds_test, _y_test=preds_val,y_val
+
+                # _preds_test, _y_test = ss_y.inverse_transform(preds_val.reshape(-1)), ss_y.inverse_transform(
+                #     np.array(y_val).reshape(-1))
                 _rmse_test, _r2_test = np.square(mean_squared_error(y_val, preds_val)), r2_score(_y_test, _preds_test)
 
                 plt.title(
@@ -272,9 +276,9 @@ class prediction_model_train(QThread):
 
                 # 画图，可以通过修改下面的参数选择marker的类型，线形以及颜色
                 # 具体可选类型可以参考https://www.cnblogs.com/shuaishuaidefeizhu/p/11361220.html
-                plt.plot(ss_y.inverse_transform(preds_val.reshape(-1)), marker='x', linestyle='-', color='b',
+                plt.plot(_preds_test, marker='x', linestyle='-', color='b',
                          label='predict label')
-                plt.plot(ss_y.inverse_transform(np.array(y_val).reshape(-1)), marker='x', linestyle='--', color='r',
+                plt.plot(_y_test, marker='x', linestyle='--', color='r',
                          label='true label')
                 # 图例字体大小设置
                 plt.legend(fontsize=20, loc='upper right')

@@ -18,7 +18,7 @@ class class_test_class():
         self.dataset_config = {}
         self.train_dataset = pd.DataFrame()
         self.val_dataset = pd.DataFrame()
-        self.set_dataset(**load_dataset('./dataset/Surgical-deepnet.yaml'))
+        self.set_dataset(**load_train_dataset('./dataset/Surgical-deepnet.yaml'))
         self.chosen_algo = self.algo_dict['random_forest']
         self.model_config = {}
         self.set_model_config(load_config('./model_config/rf_classification_config.yaml'))
@@ -332,7 +332,7 @@ class class_test_class():
 
 if __name__ == '__main__':
     t = class_test_class()
-    t.set_dataset(**load_dataset('./dataset/Surgical-deepnet.yaml'))
+    t.set_dataset(**load_train_dataset('./dataset/Surgical-deepnet.yaml'))
     t.set_model_config(load_config('./model_config/rf_classification_config.yaml'))
 
     t.run()
