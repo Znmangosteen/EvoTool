@@ -44,6 +44,7 @@ class MainForm(QMainWindow, Ui_MainWindow):
         self.open_result_btn.clicked.connect(self.open_result_folder)
         self.open_infer_result_btn.clicked.connect(self.open_infer_result_folder)
 
+        self.feature_select_checkbox.stateChanged.connect(self.feature_select_state)
         # self.algo_select.activated[str].connect(self.change_algo)
 
     def open_dataset(self):
@@ -108,6 +109,9 @@ class MainForm(QMainWindow, Ui_MainWindow):
 
     def infer_model(self):
         self._prediction_model_infer.start()
+
+    def feature_select_state(self):
+        self._prediction_model_train.enable_feature_select = self.feature_select_checkbox.checkState()
     # def change_algo(self,selected_algo):
     #     self._prediction_model_train.set_algo(selected_algo)
     #     print(selected_algo)

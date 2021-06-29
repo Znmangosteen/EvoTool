@@ -40,8 +40,7 @@ class prediction_model_train(QThread):
 
         self.save_path = ''
 
-        self.enable_feature_select = False
-
+        self.enable_feature_select = True
 
     def set_algo(self, algo):
         self.chosen_algo = ALGO_DICT[algo]
@@ -148,6 +147,9 @@ class prediction_model_train(QThread):
                     save_path += '{}-feature'.format(f_num) + '/'
                 os.makedirs(save_path)
 
+                model.used_features = self.dataset_config['feature_columns']
+                model.target = self.dataset_config['output_column']
+
                 self.save_model(model, save_path + 'model.eam')
 
                 # rmse, r2 = eval_model(rfr, X_val, y_val)
@@ -229,7 +231,7 @@ class prediction_model_train(QThread):
                 preds_train = model.predict(X_train)
                 preds_val = model.predict(X_val)
 
-                _preds_train, _y_train=preds_train,y_train
+                _preds_train, _y_train = preds_train, y_train
                 # _preds_train, _y_train = ss_y.inverse_transform(preds_train.reshape(-1)), ss_y.inverse_transform(
                 #     np.array(y_train).reshape(-1))
                 _rmse_train, _r2_train = np.square(mean_squared_error(y_train, preds_train)), r2_score(_y_train,
@@ -263,7 +265,7 @@ class prediction_model_train(QThread):
                 plt.xticks(fontsize=30)
                 plt.yticks(fontsize=30)
 
-                _preds_test, _y_test=preds_val,y_val
+                _preds_test, _y_test = preds_val, y_val
 
                 # _preds_test, _y_test = ss_y.inverse_transform(preds_val.reshape(-1)), ss_y.inverse_transform(
                 #     np.array(y_val).reshape(-1))
